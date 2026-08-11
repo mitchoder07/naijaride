@@ -1,0 +1,376 @@
+// Prisma schema for NaijaRide — a Nigerian carpooling platform
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DRIVER
+  PASSENGER
+  BOTH
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  PREFER_NOT_TO_SAY
+}
+
+enum VerificationType {
+  NIN
+  DRIVERS_LICENSE
+  VEHICLE_PLATE
+  SELFIE
+  PHONE
+  EMAIL
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum IncidentType {
+  DRIVER_DIDNT_SHOW
+  RECKLESS_DRIVING
+  HARASSMENT
+  SUSPECTED_KIDNAPPING
+  THEFT
+  OFFLINE_MEETING_REQUEST
+  FAKE_IDENTITY
+  OTHER
+}
+
+enum IncidentStatus {
+  REPORTED
+  UNDER_REVIEW
+  ACTIONED
+  DISMISSED
+}
+
+enum ShareAudience {
+  PUBLIC_LINK
+  EMERGENCY_CONTACT
+  PLATFORM
+}
+
+enum TripStatus {
+  OPEN
+  FULL
+  COMPLETED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  EARNING
+  COMMISSION
+  REFUND
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  name          String
+  phone         String?
+  role          Role     @default(PASSENGER)
+  gender        Gender   @default(PREFER_NOT_TO_SAY)
+  avatarUrl     String?
+  walletBalance Int      @default(0)
+  isDemo        Boolean  @default(false)
+  // Safety fields
+  trustScore    Int      @default(0)  // 0-100 computed score
+  isVerified    Boolean  @default(false) // becomes true when NIN + selfie + phone verified
+  nlpShadowbanned Boolean @default(false) // silently block bad actors
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tripsAsDriver     Trip[]              @relation("DriverTrips")
+  bookings          Booking[]
+  messagesSent      Message[]
+  reviewsGiven      Review[]            @relation("ReviewerReviews")
+  reviewsReceived   Review[]            @relation("RevieweeReviews")
+  walletTransactions WalletTransaction[]
+  verifications     Verification[]
+  emergencyContacts EmergencyContact[]
+  incidentsReported SafetyIncident[]    @relation("IncidentReporter")
+  incidentsAgainst  SafetyIncident[]    @relation("IncidentSubject")
+  blocksInitiated   Block[]             @relation("Blocker")
+  blocksReceived    Block[]             @relation("Blocked")
+  tripShares        TripShare[]
+  sosAlerts         SosAlert[]
+  notifications     NotificationLog[]
+
+  @@index([email])
+  @@index([isVerified])
+  @@index([trustScore])
+}
+
+model Trip {
+  id              String      @id @default(cuid())
+  driverId        String
+  driver          User        @relation("DriverTrips", fields: [driverId], references: [id], onDelete: Cascade)
+  originLabel     String
+  originLat       Float
+  originLng       Float
+  destinationLabel String
+  destinationLat  Float
+  destinationLng  Float
+  waypointsJson   String
+  departureAt     DateTime
+  seatsTotal      Int
+  seatsAvailable  Int
+  pricePerSeat    Int
+  vehicleModel    String
+  vehicleColor    String
+  vehiclePlate    String
+  status          TripStatus  @default(OPEN)
+  // Recurring trips: parent trip template + recurrence rule
+  isRecurring     Boolean     @default(false)
+  recurrenceRule   String?    // e.g. "WEEKLY:1,2,3,4,5" = Mon-Fri weekly
+  parentId        String?    // generated child trips link back to parent
+  parent          Trip?       @relation("TripChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children        Trip[]      @relation("TripChildren")
+  // Safety: female-only ride option (driver + all passengers must be female)
+  femaleOnly      Boolean     @default(false)
+  // Safety: live trip status for active trip sharing
+  tripStartedAt   DateTime?
+  tripEndedAt     DateTime?
+  currentLat      Float?
+  currentLng      Float?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  bookings        Booking[]
+  shares          TripShare[]
+  sosAlerts       SosAlert[]
+
+  @@index([driverId])
+  @@index([status])
+  @@index([departureAt])
+  @@index([parentId])
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  tripId        String
+  trip          Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  passengerId   String
+  passenger     User          @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+  seatsBooked   Int           @default(1)
+  fareTotal     Int
+  commission    Int
+  status        BookingStatus @default(PENDING)
+  paystackRef   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  messages      Message[]
+  reviews       Review[]
+  transactions  WalletTransaction[]
+  sosAlerts     SosAlert[]
+
+  @@index([tripId])
+  @@index([passengerId])
+  @@index([status])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User    @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  text        String
+  createdAt   DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([senderId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reviewerId  String
+  reviewer    User     @relation("ReviewerReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId  String
+  reviewee    User     @relation("RevieweeReviews", fields: [revieweeId], references: [id], onDelete: Cascade)
+  rating      Int
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@unique([bookingId, reviewerId])
+  @@index([bookingId])
+  @@index([reviewerId])
+  @@index([revieweeId])
+}
+
+model WalletTransaction {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  signed      Int
+  type        TransactionType
+  bookingId   String?
+  booking     Booking?        @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  createdAt   DateTime        @default(now())
+
+  @@index([userId])
+  @@index([bookingId])
+}
+
+model NotificationLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  body        String
+  type        String   // BOOKING_CONFIRMED, NEW_MESSAGE, TRIP_REMINDER, REVIEW_PROMPT, SOS_ALERT, SAFETY_UPDATE
+  bookingId   String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
+
+// ============================================================
+// SAFETY MODELS — Anti-kidnapping & trust infrastructure
+// ============================================================
+
+/// Identity verification records — each user can have multiple
+/// (NIN, drivers license, plate, selfie, phone, email)
+model Verification {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        VerificationType
+  status      VerificationStatus @default(PENDING)
+  // For phone/email: token; for NIN/license/plate: masked reference number
+  reference   String?
+  // For selfie: file path or base64 thumbnail
+  documentUrl String?
+  // Admin reviewer notes
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  rejectionReason String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+}
+
+/// Emergency contacts — notified when SOS triggered
+model EmergencyContact {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String
+  relationship String? // e.g. "Brother", "Wife", "Friend"
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Safety incidents / reports — for both passengers and drivers
+model SafetyIncident {
+  id            String         @id @default(cuid())
+  reporterId    String
+  reporter      User           @relation("IncidentReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  subjectId     String         // the accused user
+  subject       User           @relation("IncidentSubject", fields: [subjectId], references: [id], onDelete: Cascade)
+  bookingId     String?
+  type          IncidentType
+  description   String
+  status        IncidentStatus @default(REPORTED)
+  // Admin actions
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  resolution    String?
+  // Severity 1-5 (5 = suspected kidnapping, immediate escalation)
+  severity      Int            @default(2)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([reporterId])
+  @@index([subjectId])
+  @@index([status])
+  @@index([type])
+}
+
+/// User-to-user block — prevents future matching and messaging
+model Block {
+  id          String   @id @default(cuid())
+  blockerId   String
+  blocker     User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId   String
+  blocked     User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+/// Live trip share — generates a tokenized URL with live location + ETA
+model TripShare {
+  id          String        @id @default(cuid())
+  tripId      String
+  trip        Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String        // who created the share
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       String        @unique @default(cuid())
+  audience    ShareAudience @default(PUBLIC_LINK)
+  expiresAt   DateTime
+  createdAt   DateTime      @default(now())
+
+  @@index([tripId])
+  @@index([token])
+}
+
+/// SOS alert log — every panic button press
+model SosAlert {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tripId      String?
+  trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  bookingId   String?
+  booking     Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  lat         Float?
+  lng         Float?
+  message     String?
+  // PENDING = sent, ACKNOWLEDGED = admin saw, RESOLVED = closed
+  status      String   @default("PENDING")
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  resolution  String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}

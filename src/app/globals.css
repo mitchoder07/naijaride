@@ -1,0 +1,307 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ============================================================
+   NAIJARIDE DESIGN SYSTEM v2 — "Road Trip Sunset"
+   Light: warm cream paper + ink-black + sunset orange + emerald accent
+   Dark: deep cocoa + warm cream text + glowing sunset + emerald accent
+   ============================================================ */
+
+:root {
+  --radius: 1rem;
+  /* Warm paper cream */
+  --background: oklch(0.985 0.012 75);
+  /* Ink black (slightly warm) */
+  --foreground: oklch(0.18 0.018 50);
+  /* Pure white card */
+  --card: oklch(1 0.004 75);
+  --card-foreground: oklch(0.18 0.018 50);
+  --popover: oklch(1 0.004 75);
+  --popover-foreground: oklch(0.18 0.018 50);
+  /* Sunset orange #E8590C — bold, Nigerian sunset */
+  --primary: oklch(0.62 0.21 38);
+  --primary-foreground: oklch(0.99 0.005 75);
+  /* Sand secondary */
+  --secondary: oklch(0.94 0.025 70);
+  --secondary-foreground: oklch(0.25 0.025 50);
+  /* Muted cream */
+  --muted: oklch(0.95 0.02 70);
+  --muted-foreground: oklch(0.48 0.025 50);
+  /* Soft sand accent */
+  --accent: oklch(0.92 0.045 60);
+  --accent-foreground: oklch(0.3 0.05 40);
+  /* Hot red destructive */
+  --destructive: oklch(0.58 0.24 27);
+  --destructive-foreground: oklch(0.99 0.005 75);
+  /* Bold borders */
+  --border: oklch(0.86 0.022 70);
+  --input: oklch(0.9 0.022 70);
+  --ring: oklch(0.62 0.21 38);
+  /* Sunset chart palette */
+  --chart-1: oklch(0.62 0.21 38);
+  --chart-2: oklch(0.55 0.16 145);
+  --chart-3: oklch(0.78 0.14 75);
+  --chart-4: oklch(0.45 0.18 290);
+  --chart-5: oklch(0.7 0.18 12);
+  /* Sidebar */
+  --sidebar: oklch(0.97 0.015 70);
+  --sidebar-foreground: oklch(0.18 0.018 50);
+  --sidebar-primary: oklch(0.62 0.21 38);
+  --sidebar-primary-foreground: oklch(0.99 0.005 75);
+  --sidebar-accent: oklch(0.92 0.045 60);
+  --sidebar-accent-foreground: oklch(0.3 0.05 40);
+  --sidebar-border: oklch(0.86 0.022 70);
+  --sidebar-ring: oklch(0.62 0.21 38);
+}
+
+.dark {
+  /* Deep cocoa */
+  --background: oklch(0.16 0.018 45);
+  --foreground: oklch(0.96 0.018 75);
+  /* Slightly elevated card */
+  --card: oklch(0.22 0.025 45);
+  --card-foreground: oklch(0.96 0.018 75);
+  --popover: oklch(0.22 0.025 45);
+  --popover-foreground: oklch(0.96 0.018 75);
+  /* Glowing sunset */
+  --primary: oklch(0.72 0.21 38);
+  --primary-foreground: oklch(0.16 0.018 45);
+  /* Mocha secondary */
+  --secondary: oklch(0.3 0.025 45);
+  --secondary-foreground: oklch(0.96 0.018 75);
+  --muted: oklch(0.28 0.02 45);
+  --muted-foreground: oklch(0.72 0.02 70);
+  /* Soft sand accent (warmer) */
+  --accent: oklch(0.4 0.08 50);
+  --accent-foreground: oklch(0.96 0.018 75);
+  --destructive: oklch(0.65 0.24 27);
+  --destructive-foreground: oklch(0.99 0.005 75);
+  --border: oklch(0.32 0.022 45 / 80%);
+  --input: oklch(0.32 0.022 45);
+  --ring: oklch(0.72 0.21 38);
+  --chart-1: oklch(0.72 0.21 38);
+  --chart-2: oklch(0.65 0.16 145);
+  --chart-3: oklch(0.78 0.14 75);
+  --chart-4: oklch(0.55 0.18 290);
+  --chart-5: oklch(0.72 0.18 12);
+  --sidebar: oklch(0.2 0.018 45);
+  --sidebar-foreground: oklch(0.96 0.018 75);
+  --sidebar-primary: oklch(0.72 0.21 38);
+  --sidebar-primary-foreground: oklch(0.16 0.018 45);
+  --sidebar-accent: oklch(0.4 0.08 50);
+  --sidebar-accent-foreground: oklch(0.96 0.018 75);
+  --sidebar-border: oklch(0.32 0.022 45 / 80%);
+  --sidebar-ring: oklch(0.72 0.21 38);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body), system-ui, sans-serif;
+    font-feature-settings: "ss01", "cv01";
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), system-ui, sans-serif;
+    letter-spacing: -0.025em;
+  }
+}
+
+/* ============================================================
+   Custom utilities — texture, gradients, animations
+   ============================================================ */
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), system-ui, sans-serif;
+    letter-spacing: -0.025em;
+  }
+  .font-mono-tabular {
+    font-family: var(--font-mono), monospace;
+    font-feature-settings: "tnum";
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Bold brutalist border */
+  .border-bold-edge {
+    border: 2px solid var(--foreground);
+  }
+
+  /* Grainy paper texture for cards */
+  .bg-grain {
+    background-image:
+      radial-gradient(circle at 25% 35%, oklch(0.62 0.21 38 / 6%) 0%, transparent 50%),
+      radial-gradient(circle at 75% 65%, oklch(0.55 0.16 145 / 4%) 0%, transparent 50%);
+  }
+
+  /* Hero — bold sunset gradient + grid */
+  .bg-hero-sunset {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, oklch(0.62 0.21 38 / 25%) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 60% at 100% 100%, oklch(0.55 0.16 145 / 18%) 0%, transparent 60%),
+      linear-gradient(180deg, oklch(0.985 0.012 75) 0%, oklch(0.95 0.025 75) 100%);
+  }
+  .dark .bg-hero-sunset {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, oklch(0.72 0.21 38 / 30%) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 60% at 100% 100%, oklch(0.65 0.16 145 / 22%) 0%, transparent 60%),
+      linear-gradient(180deg, oklch(0.16 0.018 45) 0%, oklch(0.19 0.025 45) 100%);
+  }
+
+  /* Subtle dotted grid background */
+  .bg-grid-dots {
+    background-image: radial-gradient(circle, oklch(0.5 0.02 50 / 18%) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .dark .bg-grid-dots {
+    background-image: radial-gradient(circle, oklch(0.7 0.02 70 / 22%) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Stamp-style card */
+  .card-stamp {
+    box-shadow:
+      0 1px 0 0 oklch(0.18 0.018 50 / 8%),
+      0 0 0 1px oklch(0.18 0.018 50 / 10%),
+      0 8px 24px -8px oklch(0.62 0.21 38 / 12%);
+  }
+  .dark .card-stamp {
+    box-shadow:
+      0 1px 0 0 oklch(1 / 4%),
+      0 0 0 1px oklch(1 / 6%),
+      0 8px 24px -8px oklch(0.72 0.21 38 / 22%);
+  }
+
+  /* Marquee */
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  /* Slow spin for stamps */
+  .animate-stamp-spin {
+    animation: stamp-spin 18s linear infinite;
+  }
+
+  /* Pulse glow for primary CTA */
+  .animate-glow-pulse {
+    animation: glow-pulse 2.4s ease-in-out infinite;
+  }
+
+  /* Reveal on scroll feel */
+  .reveal-mask {
+    mask-image: linear-gradient(180deg, black 0%, black 75%, transparent 100%);
+  }
+
+  /* Scrollbar */
+  .scrollbar-warm::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-warm::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-warm::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 9999px;
+  }
+
+  /* Tag chip */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* Number ticker */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes stamp-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.62 0.21 38 / 0%); }
+  50% { box-shadow: 0 0 0 8px oklch(0.62 0.21 38 / 18%); }
+}
+@keyframes glow-pulse-destructive {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.58 0.24 27 / 0%), 0 8px 24px -4px oklch(0.58 0.24 27 / 40%); }
+  50% { box-shadow: 0 0 0 12px oklch(0.58 0.24 27 / 25%), 0 8px 24px -4px oklch(0.58 0.24 27 / 40%); }
+}
+.animate-glow-pulse-destructive {
+  animation: glow-pulse-destructive 1.8s ease-in-out infinite;
+}
+
+/* Leaflet tweaks to match the design */
+.leaflet-container {
+  font-family: var(--font-body), system-ui, sans-serif !important;
+  background: var(--muted) !important;
+  border-radius: var(--radius);
+}
+.leaflet-popup-content-wrapper {
+  background: var(--card) !important;
+  color: var(--card-foreground) !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border) !important;
+}
+.leaflet-bar a {
+  background: var(--card) !important;
+  color: var(--card-foreground) !important;
+  border-color: var(--border) !important;
+}
+.leaflet-bar a:hover {
+  background: var(--accent) !important;
+}
