@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Loader2,
   CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import {
   Dialog,
@@ -20,20 +21,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatNGN } from "@/lib/api";
+import { formatNGN, api } from "@/lib/api";
+import { toast } from "sonner";
 
-type Step = "form" | "processing" | "success";
+type Step = "form" | "processing" | "success" | "error";
 
 export function PaystackModal({
   open,
   amount,
   customerEmail,
+  bookingId,
   onClose,
   onSuccess,
 }: {
   open: boolean;
   amount: number;
   customerEmail?: string;
+  bookingId?: string | null;
   onClose: () => void;
   onSuccess: (reference: string) => void;
 }) {
@@ -43,22 +47,21 @@ export function PaystackModal({
   const [cvv, setCvv] = useState("");
   const [email, setEmail] = useState(customerEmail ?? "");
   const [reference, setReference] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     if (!open) return;
-    let active = true;
+    // Reset form state when modal opens — use Promise.resolve to avoid
+    // the "set-state-in-effect" lint rule
     Promise.resolve().then(() => {
-      if (!active) return;
       setStep("form");
       setCard("");
       setExp("");
       setCvv("");
       setEmail(customerEmail ?? "");
       setReference("");
+      setErrorMsg("");
     });
-    return () => {
-      active = false;
-    };
   }, [open, customerEmail]);
 
   const formatCardNumber = (v: string) => {
@@ -72,15 +75,37 @@ export function PaystackModal({
   };
 
   const handlePay = async () => {
+    if (!bookingId) {
+      toast.error("No booking to pay for");
+      return;
+    }
+
     setStep("processing");
-    // Simulate Paystack round-trip — 1.5s
-    await new Promise((r) => setTimeout(r, 1500));
-    const ref = `PS-mock-${Date.now()}`;
-    setReference(ref);
-    setStep("success");
-    setTimeout(() => {
-      onSuccess(ref);
-    }, 1100);
+    setErrorMsg("");
+
+    try {
+      // Call the real payment API to confirm the booking in the database
+      const res = await api.post<{ reference: string; success: boolean; error?: string }>(
+        `/api/bookings/${bookingId}/pay`,
+        {}
+      );
+
+      if (res.success && res.reference) {
+        setReference(res.reference);
+        setStep("success");
+        setTimeout(() => {
+          onSuccess(res.reference);
+        }, 1200);
+      } else {
+        setErrorMsg(res.error || "Payment failed. Please try again.");
+        setStep("error");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Payment failed. Please try again.";
+      setErrorMsg(msg);
+      setStep("error");
+      console.error("[paystack] payment error", err);
+    }
   };
 
   const valid =
@@ -241,6 +266,31 @@ export function PaystackModal({
               <p className="text-xs text-muted-foreground">
                 Your booking is now confirmed.
               </p>
+            </motion.div>
+          )}
+
+          {step === "error" && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="p-10 flex flex-col items-center text-center space-y-3"
+            >
+              <div className="size-14 rounded-full bg-destructive/15 flex items-center justify-center">
+                <AlertCircle className="size-8 text-destructive" />
+              </div>
+              <p className="font-semibold">Payment failed</p>
+              <p className="text-xs text-muted-foreground max-w-[250px]">
+                {errorMsg}
+              </p>
+              <Button
+                onClick={() => setStep("form")}
+                variant="outline"
+                className="rounded-full"
+              >
+                Try again
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>

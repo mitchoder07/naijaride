@@ -24,27 +24,34 @@ import { EmptyState } from "@/components/empty-state";
 import { toast } from "sonner";
 import { SosButton } from "@/components/safety/sos-button";
 
-interface BookingForChat {
+interface Driver {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+  phone: string | null;
+}
+
+interface Trip {
+  id: string;
+  originLabel: string;
+  destinationLabel: string;
+  departureAt: string;
+  driver: Driver;
+}
+
+interface Passenger {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+}
+
+interface Booking {
   id: string;
   status: string;
-  trip: {
-    id: string;
-    originLabel: string;
-    destinationLabel: string;
-    departureAt: string;
-    driver: {
-      id: string;
-      name: string | null;
-      avatarUrl: string | null;
-      phone: string | null;
-    };
-  };
-  isPassenger: boolean;
-  counterpart: {
-    id: string;
-    name: string | null;
-    avatarUrl: string | null;
-  };
+  tripId: string;
+  trip: Trip;
+  passengerId: string;
+  passenger: Passenger;
 }
 
 interface ChatMessage {
@@ -60,7 +67,7 @@ interface ChatMessage {
   };
 }
 
-const POLL_INTERVAL = 2000; // 2 seconds
+const POLL_INTERVAL = 2000;
 
 export function ChatView({ bookingId }: { bookingId: string }) {
   const { navigate, back } = useNavigation();
@@ -75,16 +82,23 @@ export function ChatView({ bookingId }: { bookingId: string }) {
     queryKey: ["booking-chat", bookingId],
     enabled: !!bookingId && isAuthenticated,
     queryFn: () =>
-      api.get<{ booking: BookingForChat }>(`/api/bookings/${bookingId}`),
+      api.get<{
+        booking: Booking;
+        isPassenger: boolean;
+        isDriver: boolean;
+        counterpart: Driver | Passenger;
+      }>(`/api/bookings/${bookingId}`),
   });
+
   const booking = data?.booking;
+  const isPassenger = data?.isPassenger;
+  const counterpart = data?.counterpart;
 
   const scrollToBottom = useCallback(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, []);
 
-  // Fetch messages from the server
   const fetchMessages = useCallback(async () => {
     if (!bookingId) return;
     try {
@@ -99,22 +113,15 @@ export function ChatView({ bookingId }: { bookingId: string }) {
     }
   }, [bookingId]);
 
-  // Poll for new messages every 2 seconds
   useEffect(() => {
     if (!bookingId || !user?.id) return;
-
-    // Initial fetch
     fetchMessages().then(() => {
       requestAnimationFrame(scrollToBottom);
     });
-
-    // Set up polling
     const interval = setInterval(fetchMessages, POLL_INTERVAL);
-
     return () => clearInterval(interval);
   }, [bookingId, user?.id, fetchMessages, scrollToBottom]);
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     requestAnimationFrame(scrollToBottom);
   }, [messages, scrollToBottom]);
@@ -126,7 +133,6 @@ export function ChatView({ bookingId }: { bookingId: string }) {
     try {
       await api.post("/api/messages", { bookingId, text: trimmed });
       setText("");
-      // Immediately fetch new messages (don't wait for next poll cycle)
       setTimeout(fetchMessages, 200);
     } catch (err) {
       toast.error("Failed to send message");
@@ -162,18 +168,20 @@ export function ChatView({ bookingId }: { bookingId: string }) {
     );
   }
 
-  if (!booking) {
+  if (!booking || !booking.trip) {
     return (
       <EmptyState
         icon={Car}
         title="Booking not found"
-        description="This booking may have been cancelled."
+        description="This booking may have been cancelled or you don't have access to it."
         action={<Button onClick={() => navigate("bookings")}>Back to bookings</Button>}
       />
     );
   }
 
   const isMe = (senderId?: string) => senderId === user?.id;
+  const driver = booking.trip.driver;
+  const counterpartName = counterpart?.name ?? (isPassenger ? driver?.name : booking.passenger?.name);
 
   return (
     <main className="container mx-auto px-4 py-4 md:py-6 max-w-3xl">
@@ -188,13 +196,13 @@ export function ChatView({ bookingId }: { bookingId: string }) {
             <ArrowLeft className="size-5" />
           </button>
           <UserAvatar
-            name={booking.counterpart.name}
-            avatarUrl={booking.counterpart.avatarUrl}
+            name={counterpartName}
+            avatarUrl={counterpart?.avatarUrl}
             className="size-10"
           />
           <div className="min-w-0 flex-1">
             <p className="font-semibold truncate">
-              {booking.counterpart.name ?? "User"}
+              {counterpartName ?? "User"}
             </p>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <Circle
@@ -204,7 +212,7 @@ export function ChatView({ bookingId }: { bookingId: string }) {
             </p>
           </div>
           <Badge variant="secondary" className="hidden sm:inline-flex">
-            {booking.isPassenger ? "Passenger" : "Driver"}
+            {isPassenger ? "Passenger" : "Driver"}
           </Badge>
         </div>
 
@@ -232,9 +240,9 @@ export function ChatView({ bookingId }: { bookingId: string }) {
                 </span>
               </p>
             </div>
-            {booking.trip.driver.phone && (
+            {driver?.phone && (
               <a
-                href={`tel:${booking.trip.driver.phone}`}
+                href={`tel:${driver.phone}`}
                 onClick={(e) => e.stopPropagation()}
                 className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 hover:bg-primary/20"
                 aria-label="Call driver"

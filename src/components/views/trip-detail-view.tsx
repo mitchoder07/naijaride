@@ -599,6 +599,7 @@ export function TripDetailView({ tripId }: { tripId: string }) {
         open={payOpen}
         amount={totalFare}
         customerEmail={user?.email}
+        bookingId={bookingId}
         onClose={() => setPayOpen(false)}
         onSuccess={handlePaySuccess}
       />
