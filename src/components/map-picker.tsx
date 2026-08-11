@@ -28,14 +28,30 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
     if (!res.ok) return `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
     const data = await res.json();
     const addr = data?.address ?? {};
-    const town =
-      addr.city || addr.town || addr.village || addr.county || addr.state || "";
-    const country = addr.country || "";
-    return (
-      [town, country].filter(Boolean).join(", ") ||
-      data?.display_name ||
-      `${lat.toFixed(3)}, ${lng.toFixed(3)}`
-    );
+
+    // Build label from most specific to least specific, skipping duplicates
+    const parts: string[] = [];
+    const fields = [
+      addr.neighbourhood,
+      addr.suburb,
+      addr.city,
+      addr.town,
+      addr.village,
+      addr.county,
+      addr.state,
+      addr.country,
+    ];
+
+    for (const f of fields) {
+      if (!f) continue;
+      // Skip if this part is already included (e.g. "Nigeria" appearing twice)
+      if (parts.some((p) => p.toLowerCase() === f.toLowerCase())) continue;
+      parts.push(f);
+      // Stop after we have 3 meaningful parts (enough context)
+      if (parts.length >= 3) break;
+    }
+
+    return parts.join(", ") || data?.display_name || `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
   } catch {
     return `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
   }

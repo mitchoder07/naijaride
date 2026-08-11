@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Pusher from "pusher-js";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Send,
@@ -15,7 +14,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -62,6 +60,8 @@ interface ChatMessage {
   };
 }
 
+const POLL_INTERVAL = 2000; // 2 seconds
+
 export function ChatView({ bookingId }: { bookingId: string }) {
   const { navigate, back } = useNavigation();
   const { user, isAuthenticated, isLoading } = useCurrentUser();
@@ -69,7 +69,7 @@ export function ChatView({ bookingId }: { bookingId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
   const [connected, setConnected] = useState(false);
-  const [typing, setTyping] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const { data, isLoading: bookingLoading } = useQuery({
     queryKey: ["booking-chat", bookingId],
@@ -79,71 +79,60 @@ export function ChatView({ bookingId }: { bookingId: string }) {
   });
   const booking = data?.booking;
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  };
+  }, []);
 
-  // Connect to Pusher when the chat opens
+  // Fetch messages from the server
+  const fetchMessages = useCallback(async () => {
+    if (!bookingId) return;
+    try {
+      const res = await api.get<{ messages: ChatMessage[] }>(
+        `/api/bookings/${bookingId}/messages`
+      );
+      setMessages(res.messages);
+      setConnected(true);
+    } catch (err) {
+      console.error("[chat] fetch error", err);
+      setConnected(false);
+    }
+  }, [bookingId]);
+
+  // Poll for new messages every 2 seconds
   useEffect(() => {
     if (!bookingId || !user?.id) return;
 
-    // Initialize Pusher client with your public key
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    });
-
-    // Subscribe to this booking's channel
-    const channel = pusher.subscribe(`booking-${bookingId}`);
-
-    // When connected, mark as online
-    channel.bind("pusher:subscription_succeeded", () => {
-      setConnected(true);
-    });
-
-    // Listen for new messages
-    channel.bind("chat:message", (data: { message: ChatMessage }) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === data.message.id)) return prev;
-        return [...prev, data.message];
-      });
-      setTyping(false);
+    // Initial fetch
+    fetchMessages().then(() => {
       requestAnimationFrame(scrollToBottom);
     });
 
-    // Load message history from the database
-    api
-      .get<{ messages: ChatMessage[] }>(`/api/bookings/${bookingId}/messages`)
-      .then((res) => {
-        setMessages(res.messages);
-        requestAnimationFrame(scrollToBottom);
-      })
-      .catch(console.error);
+    // Set up polling
+    const interval = setInterval(fetchMessages, POLL_INTERVAL);
 
-    // Cleanup when leaving the chat
-    return () => {
-      pusher.unsubscribe(`booking-${bookingId}`);
-      pusher.disconnect();
-      setConnected(false);
-    };
-  }, [bookingId, user?.id]);
+    return () => clearInterval(interval);
+  }, [bookingId, user?.id, fetchMessages, scrollToBottom]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     requestAnimationFrame(scrollToBottom);
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  // Send a message
   const sendMessage = async () => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || sending) return;
+    setSending(true);
     try {
       await api.post("/api/messages", { bookingId, text: trimmed });
       setText("");
-      // Pusher will broadcast the message back — no need to update state manually
+      // Immediately fetch new messages (don't wait for next poll cycle)
+      setTimeout(fetchMessages, 200);
     } catch (err) {
       toast.error("Failed to send message");
       console.error(err);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -211,7 +200,7 @@ export function ChatView({ bookingId }: { bookingId: string }) {
               <Circle
                 className={`size-2 ${connected ? "fill-green-500 text-green-500" : "fill-muted text-muted"}`}
               />
-              {connected ? "Online" : "Connecting..."}
+              {connected ? "Live" : "Connecting..."}
             </p>
           </div>
           <Badge variant="secondary" className="hidden sm:inline-flex">
@@ -319,11 +308,15 @@ export function ChatView({ bookingId }: { bookingId: string }) {
           <Button
             type="submit"
             size="icon"
-            disabled={!text.trim()}
+            disabled={!text.trim() || sending}
             className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 size-10"
             aria-label="Send"
           >
-            <Send className="size-4" />
+            {sending ? (
+              <span className="size-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
+            ) : (
+              <Send className="size-4" />
+            )}
           </Button>
         </form>
       </div>
