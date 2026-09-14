@@ -170,9 +170,8 @@ export function WalletView() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 overflow-hidden relative">
+          <Card className="bg-primary text-primary-foreground border-0 overflow-hidden relative">
             <CardContent className="p-6 relative z-10">
-              <div className="absolute -top-6 -right-6 size-32 rounded-full bg-primary-foreground/10 blur-xl" />
               <p className="text-xs uppercase tracking-wide opacity-80">
                 Available balance
               </p>

@@ -141,12 +141,19 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body), system-ui, sans-serif;
     font-feature-settings: "ss01", "cv01";
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display), system-ui, sans-serif;
     letter-spacing: -0.025em;
   }
@@ -160,13 +167,16 @@
     font-family: var(--font-display), system-ui, sans-serif;
     letter-spacing: -0.025em;
   }
+
   .font-mono-tabular {
     font-family: var(--font-mono), monospace;
     font-feature-settings: "tnum";
   }
+
   .text-balance {
     text-wrap: balance;
   }
+
   .text-pretty {
     text-wrap: pretty;
   }
@@ -176,49 +186,36 @@
     border: 2px solid var(--foreground);
   }
 
-  /* Grainy paper texture for cards */
+  /* Grainy paper texture for cards — removed, now solid */
   .bg-grain {
-    background-image:
-      radial-gradient(circle at 25% 35%, oklch(0.62 0.21 38 / 6%) 0%, transparent 50%),
-      radial-gradient(circle at 75% 65%, oklch(0.55 0.16 145 / 4%) 0%, transparent 50%);
+    background: var(--muted);
   }
 
-  /* Hero — bold sunset gradient + grid */
+  /* Hero — solid background, no gradients */
   .bg-hero-sunset {
-    background:
-      radial-gradient(ellipse 80% 50% at 20% 0%, oklch(0.62 0.21 38 / 25%) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 60% at 100% 100%, oklch(0.55 0.16 145 / 18%) 0%, transparent 60%),
-      linear-gradient(180deg, oklch(0.985 0.012 75) 0%, oklch(0.95 0.025 75) 100%);
+    background: var(--background);
   }
+
   .dark .bg-hero-sunset {
-    background:
-      radial-gradient(ellipse 80% 50% at 20% 0%, oklch(0.72 0.21 38 / 30%) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 60% at 100% 100%, oklch(0.65 0.16 145 / 22%) 0%, transparent 60%),
-      linear-gradient(180deg, oklch(0.16 0.018 45) 0%, oklch(0.19 0.025 45) 100%);
+    background: var(--background);
   }
 
-  /* Subtle dotted grid background */
+  /* Solid grid background removed — use muted for subtle distinction */
   .bg-grid-dots {
-    background-image: radial-gradient(circle, oklch(0.5 0.02 50 / 18%) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-  .dark .bg-grid-dots {
-    background-image: radial-gradient(circle, oklch(0.7 0.02 70 / 22%) 1px, transparent 1px);
-    background-size: 24px 24px;
+    background: var(--muted);
   }
 
-  /* Stamp-style card */
-  .card-stamp {
-    box-shadow:
-      0 1px 0 0 oklch(0.18 0.018 50 / 8%),
-      0 0 0 1px oklch(0.18 0.018 50 / 10%),
-      0 8px 24px -8px oklch(0.62 0.21 38 / 12%);
+  .dark .bg-grid-dots {
+    background: var(--muted);
   }
+
+  /* Stamp-style card — simple shadow, no colored glow */
+  .card-stamp {
+    box-shadow: 0 4px 16px -8px oklch(0 0 0 / 15%);
+  }
+
   .dark .card-stamp {
-    box-shadow:
-      0 1px 0 0 oklch(1 / 4%),
-      0 0 0 1px oklch(1 / 6%),
-      0 8px 24px -8px oklch(0.72 0.21 38 / 22%);
+    box-shadow: 0 4px 16px -8px oklch(0 0 0 / 40%);
   }
 
   /* Marquee */
@@ -231,14 +228,14 @@
     animation: stamp-spin 18s linear infinite;
   }
 
-  /* Pulse glow for primary CTA */
+  /* Pulse glow removed — use simple hover instead */
   .animate-glow-pulse {
-    animation: glow-pulse 2.4s ease-in-out infinite;
+    /* no-op — removed gradient glow */
   }
 
-  /* Reveal on scroll feel */
+  /* Reveal mask removed */
   .reveal-mask {
-    mask-image: linear-gradient(180deg, black 0%, black 75%, transparent 100%);
+    /* no-op */
   }
 
   /* Scrollbar */
@@ -246,9 +243,11 @@
     width: 8px;
     height: 8px;
   }
+
   .scrollbar-warm::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .scrollbar-warm::-webkit-scrollbar-thumb {
     background: var(--primary);
     border-radius: 9999px;
@@ -266,23 +265,28 @@
 }
 
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
+
 @keyframes stamp-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.62 0.21 38 / 0%); }
-  50% { box-shadow: 0 0 0 8px oklch(0.62 0.21 38 / 18%); }
-}
-@keyframes glow-pulse-destructive {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.58 0.24 27 / 0%), 0 8px 24px -4px oklch(0.58 0.24 27 / 40%); }
-  50% { box-shadow: 0 0 0 12px oklch(0.58 0.24 27 / 25%), 0 8px 24px -4px oklch(0.58 0.24 27 / 40%); }
-}
+
+/* Glow keyframes removed — solid colors only */
 .animate-glow-pulse-destructive {
-  animation: glow-pulse-destructive 1.8s ease-in-out infinite;
+  /* no-op */
 }
 
 /* Leaflet tweaks to match the design */
@@ -291,17 +295,20 @@
   background: var(--muted) !important;
   border-radius: var(--radius);
 }
+
 .leaflet-popup-content-wrapper {
   background: var(--card) !important;
   color: var(--card-foreground) !important;
   border-radius: var(--radius) !important;
   border: 1px solid var(--border) !important;
 }
+
 .leaflet-bar a {
   background: var(--card) !important;
   color: var(--card-foreground) !important;
   border-color: var(--border) !important;
 }
+
 .leaflet-bar a:hover {
   background: var(--accent) !important;
 }

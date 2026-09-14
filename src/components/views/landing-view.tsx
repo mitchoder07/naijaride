@@ -196,7 +196,7 @@ export function LandingView() {
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
                 <Button
                   size="lg"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-full font-semibold px-6 h-12 text-base shadow-lg shadow-primary/20"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-full font-semibold px-6 h-12 text-base"
                   onClick={() => navigate("trips-search")}
                 >
                   <Compass className="size-4" />
@@ -254,7 +254,7 @@ export function LandingView() {
 
               <Card className="overflow-hidden card-stamp border-2">
                 <CardContent className="p-0">
-                  <div className="bg-gradient-to-br from-primary/15 to-chart-2/20 p-4">
+                  <div className="bg-muted p-4">
                     <RouteMap
                       origin={{ label: "Yaba, Lagos", lat: 6.5244, lng: 3.3792 }}
                       destination={{
@@ -575,9 +575,7 @@ export function LandingView() {
       {/* CTA — bold stamp */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="rounded-[2.5rem] bg-foreground text-background p-10 md:p-16 relative overflow-hidden">
-            <div className="absolute -top-20 -right-20 size-80 rounded-full bg-primary/30 blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 size-96 rounded-full bg-primary/20 blur-3xl" />
+          <div className="rounded-[2.5rem] bg-foreground text-background p-10 md:p-16 relative overflow-hidden border-2 border-foreground/10">
             <div className="relative grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 text-primary text-xs font-semibold mb-5">
@@ -594,7 +592,7 @@ export function LandingView() {
               <div className="flex flex-col sm:flex-row md:justify-end gap-3">
                 <Button
                   size="lg"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-full font-semibold px-6 h-12 text-base shadow-xl shadow-primary/30"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-full font-semibold px-6 h-12 text-base"
                   onClick={() => navigate(isAuthenticated ? "create-trip" : "signup")}
                 >
                   Offer a ride

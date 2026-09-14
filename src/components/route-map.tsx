@@ -61,24 +61,20 @@ export function RouteMap({
         className="absolute inset-0 w-full h-full"
       >
         <defs>
-          <linearGradient id="routeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="var(--chart-2)" />
-          </linearGradient>
           <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow
               dx="0"
               dy="0"
               stdDeviation="0.5"
-              floodColor="var(--primary)"
-              floodOpacity="0.25"
+              floodColor="var(--foreground)"
+              floodOpacity="0.15"
             />
           </filter>
         </defs>
         <path
           d={pathD}
           fill="none"
-          stroke="url(#routeGrad)"
+          stroke="var(--primary)"
           strokeWidth="1.6"
           strokeLinecap="round"
           strokeLinejoin="round"

@@ -98,7 +98,7 @@ export function TrackView({ token }: { token: string }) {
 
       <Card className="border-2 mb-4 overflow-hidden">
         <CardContent className="p-0">
-          <div className="bg-gradient-to-br from-primary/10 to-chart-2/10 p-5">
+          <div className="bg-muted p-5">
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
               Tracking trip shared by
             </p>
