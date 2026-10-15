@@ -13,7 +13,7 @@ import {
   Calendar,
   Siren,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useNavigation, type ViewName } from "@/lib/store";
@@ -31,7 +31,6 @@ interface NavItem {
   authOnly?: boolean;
   driverOnly?: boolean;
   adminOnly?: boolean;
-  // If true, this item is hidden for admin users (admins see a simpler nav)
   hideForAdmin?: boolean;
 }
 
@@ -52,11 +51,21 @@ export function Navbar() {
 
   const isAdmin = user?.role === "ADMIN";
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    if (open) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
+
   const filtered = NAV_ITEMS.filter((item) => {
     if (item.authOnly && !isAuthenticated) return false;
     if (item.driverOnly && user && user.role === "PASSENGER") return false;
     if (item.adminOnly && !isAdmin) return false;
-    // Admins see a simplified nav (Dashboard + Admin + Safety)
     if (item.hideForAdmin && isAdmin) return false;
     return true;
   });
@@ -78,181 +87,219 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
-        {/* Left: Logo */}
-        <div className="flex items-center gap-6">
+    <>
+      {/* Navbar — z-[1000] to stay above Leaflet maps (which use up to z-700) */}
+      <header className="sticky top-0 z-[1000] w-full border-b border-border/60 bg-background shadow-sm">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
+          {/* Left: Logo */}
           <Logo size={36} onClick={() => handleNav("landing")} />
-        </div>
 
-        {/* Center: Primary nav (desktop) */}
-        <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-          {filtered.map((item) => {
-            const active = route.view === item.view;
-            return (
+          {/* Center: Primary nav (desktop only) */}
+          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+            {filtered.map((item) => {
+              const active = route.view === item.view;
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => handleNav(item.view)}
+                  className={cn(
+                    "flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground/70 hover:text-foreground hover:bg-muted",
+                  )}
+                  aria-current={active ? "page" : undefined}
+                >
+                  <item.icon className="size-4 shrink-0" />
+                  <span className="hidden xl:inline">{item.label}</span>
+                </button>
+              );
+            })}
+
+            {isAuthenticated && isAdmin && (
               <button
-                key={item.view}
-                onClick={() => handleNav(item.view)}
+                onClick={() => handleNav("admin")}
                 className={cn(
                   "flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                  route.view === "admin"
+                    ? "bg-foreground text-background"
                     : "text-foreground/70 hover:text-foreground hover:bg-muted",
                 )}
-                aria-current={active ? "page" : undefined}
+                aria-current={route.view === "admin" ? "page" : undefined}
               >
-                <item.icon className="size-4 shrink-0" />
-                <span className="hidden xl:inline">{item.label}</span>
+                <ShieldCheck className="size-4 shrink-0" />
+                <span className="hidden xl:inline">Admin</span>
               </button>
-            );
-          })}
-
-          {/* Admin button (only for admins) */}
-          {isAuthenticated && isAdmin && (
-            <button
-              onClick={() => handleNav("admin")}
-              className={cn(
-                "flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
-                route.view === "admin"
-                  ? "bg-foreground text-background shadow-sm"
-                  : "text-foreground/70 hover:text-foreground hover:bg-muted",
-              )}
-              aria-current={route.view === "admin" ? "page" : undefined}
-            >
-              <ShieldCheck className="size-4 shrink-0" />
-              <span className="hidden xl:inline">Admin</span>
-            </button>
-          )}
-        </nav>
-
-        {/* Right: Auth actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          <ThemeToggle />
-          {isLoading ? null : isAuthenticated ? (
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                onClick={() => handleNav("profile")}
-                className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-muted transition border border-border/60"
-                title="View profile"
-              >
-                <UserAvatar
-                  name={user?.name}
-                  avatarUrl={user?.avatarUrl}
-                  className="size-7"
-                />
-                <span className="text-sm font-semibold max-w-[100px] truncate">
-                  {user?.name?.split(" ")[0] ?? "You"}
-                </span>
-              </button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={signOutUser}
-                aria-label="Sign out"
-                className="rounded-full"
-              >
-                <LogOut className="size-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="hidden md:flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleNav("signin")}
-                className="rounded-full"
-              >
-                Sign in
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => handleNav("signup")}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-semibold"
-              >
-                Get started
-              </Button>
-            </div>
-          )}
-          <button
-            className="lg:hidden p-2"
-            onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
-          >
-            {open ? <X className="size-6" /> : <Menu className="size-6" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {open && (
-        <div className="lg:hidden border-t border-border/60 bg-background animate-in slide-in-from-top-2 duration-200">
-          <div className="container mx-auto px-4 py-3 space-y-1">
-            {filtered.map((item) => (
-              <Button
-                key={item.view}
-                variant={route.view === item.view ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => handleNav(item.view)}
-                className="w-full justify-start gap-2 rounded-full"
-              >
-                <item.icon className="size-4" />
-                {item.label}
-              </Button>
-            ))}
-            {isAuthenticated && isAdmin && (
-              <Button
-                variant={route.view === "admin" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => handleNav("admin")}
-                className="w-full justify-start gap-2 rounded-full"
-              >
-                <ShieldCheck className="size-4" />
-                Admin
-              </Button>
             )}
-            {!isAuthenticated && (
-              <>
+          </nav>
+
+          {/* Right: Auth actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <ThemeToggle />
+            {isLoading ? null : isAuthenticated ? (
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  onClick={() => handleNav("profile")}
+                  className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-muted transition border border-border/60"
+                  title="View profile"
+                >
+                  <UserAvatar
+                    name={user?.name}
+                    avatarUrl={user?.avatarUrl}
+                    className="size-7"
+                  />
+                  <span className="text-sm font-semibold max-w-[100px] truncate">
+                    {user?.name?.split(" ")[0] ?? "You"}
+                  </span>
+                </button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={signOutUser}
+                  aria-label="Sign out"
+                  className="rounded-full"
+                >
+                  <LogOut className="size-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleNav("signin")}
-                  className="w-full justify-start rounded-full"
+                  className="rounded-full"
                 >
                   Sign in
                 </Button>
                 <Button
                   size="sm"
                   onClick={() => handleNav("signup")}
-                  className="w-full justify-start bg-primary text-primary-foreground hover:bg-primary/90 rounded-full"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-semibold"
                 >
                   Get started
                 </Button>
-              </>
+              </div>
             )}
-            {isAuthenticated && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleNav("profile")}
-                  className="w-full justify-start gap-2 rounded-full"
+            {/* Mobile hamburger */}
+            <button
+              className="lg:hidden p-2 -mr-2"
+              onClick={() => setOpen(!open)}
+              aria-label="Toggle menu"
+              aria-expanded={open}
+            >
+              {open ? <X className="size-6" /> : <Menu className="size-6" />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile menu — fixed overlay, doesn't push content down */}
+      {open && (
+        <div className="lg:hidden fixed inset-0 z-[1100] flex flex-col">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setOpen(false)}
+          />
+
+          {/* Menu panel — slides from top, takes full width */}
+          <div className="relative bg-background shadow-xl flex flex-col max-h-[85vh] overflow-y-auto">
+            {/* Menu header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+              <Logo size={32} onClick={() => handleNav("landing")} />
+              <button
+                onClick={() => setOpen(false)}
+                className="p-2 -mr-2 text-muted-foreground hover:text-foreground"
+                aria-label="Close menu"
+              >
+                <X className="size-6" />
+              </button>
+            </div>
+
+            {/* Menu items */}
+            <div className="px-4 py-3 space-y-1">
+              {filtered.map((item) => {
+                const active = route.view === item.view;
+                return (
+                  <button
+                    key={item.view}
+                    onClick={() => handleNav(item.view)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-muted",
+                    )}
+                  >
+                    <item.icon className="size-5 shrink-0" />
+                    {item.label}
+                  </button>
+                );
+              })}
+
+              {isAuthenticated && isAdmin && (
+                <button
+                  onClick={() => handleNav("admin")}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                    route.view === "admin"
+                      ? "bg-foreground text-background"
+                      : "text-foreground hover:bg-muted",
+                  )}
                 >
-                  My Profile
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={signOutUser}
-                  className="w-full justify-start gap-2 rounded-full text-destructive"
-                >
-                  <LogOut className="size-4" />
-                  Sign out
-                </Button>
-              </>
-            )}
+                  <ShieldCheck className="size-5 shrink-0" />
+                  Admin
+                </button>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-border/60 mx-4" />
+
+            {/* Auth section */}
+            <div className="px-4 py-3 space-y-1">
+              {!isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => handleNav("signin")}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-all"
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    onClick={() => handleNav("signup")}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
+                  >
+                    Get started
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleNav("profile")}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-all"
+                  >
+                    <UserAvatar
+                      name={user?.name}
+                      avatarUrl={user?.avatarUrl}
+                      className="size-8"
+                    />
+                    <span className="truncate">{user?.name ?? "My Profile"}</span>
+                  </button>
+                  <button
+                    onClick={signOutUser}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/5 transition-all"
+                  >
+                    <LogOut className="size-5 shrink-0" />
+                    Sign out
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
