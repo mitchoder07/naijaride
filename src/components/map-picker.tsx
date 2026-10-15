@@ -42,25 +42,34 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   }
   try {
+    // Try with result_type filter for specific addresses first
     const res = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_KEY}&language=en&result_type=street_address|route|neighborhood|sublocality|locality|administrative_area_level_2|administrative_area_level_1`,
     );
-    if (!res.ok) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     const data = await res.json();
-    if (data.results && data.results.length > 0) {
-      // Return the most specific result
+
+    if (data.status === "OK" && data.results && data.results.length > 0) {
       return data.results[0].formatted_address;
     }
-    // Fallback: if no results with result_type filter, try without
+
+    // Fallback: try without result_type filter
     const res2 = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_KEY}&language=en`,
     );
     const data2 = await res2.json();
-    if (data2.results && data2.results.length > 0) {
+
+    if (data2.status === "OK" && data2.results && data2.results.length > 0) {
       return data2.results[0].formatted_address;
     }
+
+    // If API returned an error, log it
+    if (data.error_message) {
+      console.error("[geocode] API error:", data.error_message);
+    }
+
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-  } catch {
+  } catch (err) {
+    console.error("[geocode] fetch error", err);
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   }
 }
@@ -248,10 +257,10 @@ export function MapPicker({
               <Button
                 variant="default"
                 onClick={() => setFullscreenOpen(false)}
-                className="rounded-full gap-1.5 shrink-0"
+                className="rounded-full gap-1.5 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-4"
               >
-                <ArrowLeft className="size-4" />
-                <span className="hidden sm:inline">Back</span>
+                <ArrowLeft className="size-5" />
+                <span>Back</span>
               </Button>
               <div className="flex-1">
                 <GooglePlacesSearch

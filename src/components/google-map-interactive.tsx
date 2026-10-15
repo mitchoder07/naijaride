@@ -6,13 +6,11 @@ import {
   Map,
   Marker,
   useMap,
-  useMapsLibrary,
 } from "@vis.gl/react-google-maps";
 import type { GeoPoint } from "@/components/map-picker";
 
 const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!;
 
-// Inner component that handles map clicks, marker, and centering
 function MapContent({
   pickup,
   onPick,
@@ -21,9 +19,7 @@ function MapContent({
   onPick: (lat: number, lng: number) => void;
 }) {
   const map = useMap();
-  const places = useMapsLibrary("places");
 
-  // Center map on pickup when it changes
   useEffect(() => {
     if (map && pickup) {
       map.panTo({ lat: pickup.lat, lng: pickup.lng });
@@ -31,7 +27,6 @@ function MapContent({
     }
   }, [map, pickup]);
 
-  // Handle map clicks
   useEffect(() => {
     if (!map) return;
     const clickListener = map.addListener("click", (e: google.maps.MapMouseEvent) => {
@@ -84,7 +79,6 @@ export default function GoogleMapInteractive({
           fullscreenControl={false}
           zoomControl={true}
           style={{ width: "100%", height: "100%" }}
-          mapId="naijaride-map"
         >
           {onPick && (
             <MapContent
