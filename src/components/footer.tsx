@@ -45,7 +45,7 @@ export function Footer() {
             <div className="flex flex-wrap gap-2 text-xs">
               <span className="chip bg-muted text-muted-foreground">
                 <MapPin className="size-3" />
-                Lagos · Abuja · PH · Kano
+                Abuja · Ikeja · Ilorin · Kaduna · Zaria · Lokoja · PH · Ibadan · Benin · Enugu
               </span>
               <span className="chip bg-muted text-muted-foreground">
                 <Shield className="size-3" />
