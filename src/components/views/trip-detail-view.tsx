@@ -315,7 +315,7 @@ export function TripDetailView({ tripId }: { tripId: string }) {
                   <div className="rounded-lg bg-accent/40 p-3">
                     <Car className="size-4 text-primary mb-1" />
                     <p className="text-xs text-muted-foreground">Model</p>
-                    <p className="font-medium truncate">{trip.vehicleModel}</p>
+                    <p className="font-medium text-sm leading-tight">{trip.vehicleModel}</p>
                   </div>
                   <div className="rounded-lg bg-accent/40 p-3">
                     <div className="size-4 rounded-full border-2 border-border mb-1" />
