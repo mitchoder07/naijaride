@@ -141,19 +141,12 @@
   * {
     @apply border-border outline-ring/50;
   }
-
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body), system-ui, sans-serif;
     font-feature-settings: "ss01", "cv01";
   }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display), system-ui, sans-serif;
     letter-spacing: -0.025em;
   }
@@ -167,16 +160,13 @@
     font-family: var(--font-display), system-ui, sans-serif;
     letter-spacing: -0.025em;
   }
-
   .font-mono-tabular {
     font-family: var(--font-mono), monospace;
     font-feature-settings: "tnum";
   }
-
   .text-balance {
     text-wrap: balance;
   }
-
   .text-pretty {
     text-wrap: pretty;
   }
@@ -195,7 +185,6 @@
   .bg-hero-sunset {
     background: var(--background);
   }
-
   .dark .bg-hero-sunset {
     background: var(--background);
   }
@@ -204,7 +193,6 @@
   .bg-grid-dots {
     background: var(--muted);
   }
-
   .dark .bg-grid-dots {
     background: var(--muted);
   }
@@ -213,7 +201,6 @@
   .card-stamp {
     box-shadow: 0 4px 16px -8px oklch(0 0 0 / 15%);
   }
-
   .dark .card-stamp {
     box-shadow: 0 4px 16px -8px oklch(0 0 0 / 40%);
   }
@@ -243,11 +230,9 @@
     width: 8px;
     height: 8px;
   }
-
   .scrollbar-warm::-webkit-scrollbar-track {
     background: transparent;
   }
-
   .scrollbar-warm::-webkit-scrollbar-thumb {
     background: var(--primary);
     border-radius: 9999px;
@@ -265,50 +250,47 @@
 }
 
 @keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-50%);
-  }
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
-
 @keyframes stamp-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
-
 /* Glow keyframes removed — solid colors only */
 .animate-glow-pulse-destructive {
   /* no-op */
 }
 
-/* Leaflet tweaks to match the design */
+/* Leaflet tweaks — keep maps BELOW the navbar (navbar is z-[1000]) */
 .leaflet-container {
   font-family: var(--font-body), system-ui, sans-serif !important;
   background: var(--muted) !important;
   border-radius: var(--radius);
+  /* Create a new stacking context so Leaflet's internal z-indexes
+     don't bleed through to overlay the navbar */
+  position: relative;
+  z-index: 0;
 }
-
+/* Override Leaflet's high internal z-index values */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control,
+.leaflet-popup-pane {
+  z-index: 1 !important;
+}
 .leaflet-popup-content-wrapper {
   background: var(--card) !important;
   color: var(--card-foreground) !important;
   border-radius: var(--radius) !important;
   border: 1px solid var(--border) !important;
 }
-
 .leaflet-bar a {
   background: var(--card) !important;
   color: var(--card-foreground) !important;
   border-color: var(--border) !important;
 }
-
 .leaflet-bar a:hover {
   background: var(--accent) !important;
 }
