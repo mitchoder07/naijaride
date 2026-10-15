@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, Suspense, lazy } from "react";
-import { MapPin, Crosshair, X, Search, Maximize2, ArrowLeft } from "lucide-react";
+import { useRef, useState, Suspense, lazy } from "react";
+import { MapPin, Crosshair, X, Maximize2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import {
   SUPPORTED_CITIES,
   findNearestCity,
 } from "@/lib/cities";
+import { GooglePlacesSearch } from "@/components/google-places-search";
 
 export interface GeoPoint {
   label: string;
@@ -42,12 +43,21 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
   }
   try {
     const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_KEY}&language=en`,
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_KEY}&language=en&result_type=street_address|route|neighborhood|sublocality|locality|administrative_area_level_2|administrative_area_level_1`,
     );
     if (!res.ok) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     const data = await res.json();
     if (data.results && data.results.length > 0) {
+      // Return the most specific result
       return data.results[0].formatted_address;
+    }
+    // Fallback: if no results with result_type filter, try without
+    const res2 = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_KEY}&language=en`,
+    );
+    const data2 = await res2.json();
+    if (data2.results && data2.results.length > 0) {
+      return data2.results[0].formatted_address;
     }
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   } catch {
@@ -66,12 +76,8 @@ export function MapPicker({
   const lookupBusy = useRef(false);
   const [cityWarning, setCityWarning] = useState<string | null>(null);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<
-    Array<{ label: string; lat: number; lng: number }>
-  >([]);
 
-  const handlePick = async (lat: number, lng: number) => {
+  const handlePick = async (lat: number, lng: number, placeLabel?: string) => {
     if (lookupBusy.current) return;
     lookupBusy.current = true;
     try {
@@ -87,42 +93,19 @@ export function MapPicker({
       }
 
       setCityWarning(null);
-      const resolved = await reverseGeocode(lat, lng);
-      onChange({ label: resolved, lat, lng });
+
+      // If we already have a label from search, use it. Otherwise reverse geocode.
+      const resolvedLabel = placeLabel || await reverseGeocode(lat, lng);
+      onChange({ label: resolvedLabel, lat, lng });
       setFullscreenOpen(false);
     } finally {
       lookupBusy.current = false;
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || !GOOGLE_MAPS_KEY) return;
-    try {
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-          searchQuery + ", Nigeria",
-        )}&key=${GOOGLE_MAPS_KEY}&language=en`,
-      );
-      const data = await res.json();
-      if (data.results) {
-        const results = data.results
-          .slice(0, 5)
-          .map((r: { formatted_address: string; geometry: { location: { lat: number; lng: number } } }) => ({
-            label: r.formatted_address,
-            lat: r.geometry.location.lat,
-            lng: r.geometry.location.lng,
-          }));
-        setSearchResults(results);
-      }
-    } catch (err) {
-      console.error("[search] error", err);
-    }
-  };
-
-  const handleSelectResult = (result: { label: string; lat: number; lng: number }) => {
-    handlePick(result.lat, result.lng);
-    setSearchQuery("");
-    setSearchResults([]);
+  // When user selects from search
+  const handleSearchSelect = (result: { label: string; lat: number; lng: number }) => {
+    handlePick(result.lat, result.lng, result.label);
   };
 
   const handleLocate = () => {
@@ -141,9 +124,9 @@ export function MapPicker({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <Label className="text-base font-semibold">{label}</Label>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <Button
             type="button"
             size="sm"
@@ -154,65 +137,35 @@ export function MapPicker({
             <Crosshair className="size-3.5" />
             GPS
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setFullscreenOpen(true)}
-            className="gap-1.5 rounded-full text-xs"
-          >
-            <Maximize2 className="size-3.5" />
-            Full map
-          </Button>
-        </div>
-      </div>
-
-      {/* Search box */}
-      {GOOGLE_MAPS_KEY && (
-        <div className="relative">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder={`Search for a place in ${label.toLowerCase()}...`}
-                className="pl-9 rounded-full"
-              />
-            </div>
+          {GOOGLE_MAPS_KEY && (
             <Button
               type="button"
               size="sm"
-              onClick={handleSearch}
-              className="rounded-full"
+              variant="outline"
+              onClick={() => setFullscreenOpen(true)}
+              className="gap-1.5 rounded-full text-xs"
             >
-              Search
+              <Maximize2 className="size-3.5" />
+              Full map
             </Button>
-          </div>
-          {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto">
-              {searchResults.map((result, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handleSelectResult(result)}
-                  className="w-full text-left px-3 py-2 hover:bg-muted transition border-b border-border/40 last:border-0"
-                >
-                  <div className="flex items-start gap-2">
-                    <MapPin className="size-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-sm font-medium truncate">{result.label}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
           )}
         </div>
+      </div>
+
+      {/* Google Places Search box - real-time suggestions like Google Maps */}
+      {GOOGLE_MAPS_KEY && (
+        <GooglePlacesSearch
+          placeholder={`Search for a place for ${label.toLowerCase()}...`}
+          onSelect={handleSearchSelect}
+        />
       )}
 
-      {/* Map preview - clickable to open fullscreen */}
+      {/* Map preview */}
       <div
-        className="rounded-2xl overflow-hidden border-2 border-border/60 relative cursor-pointer"
+        className={cn(
+          "rounded-2xl overflow-hidden border-2 border-border/60 relative",
+          GOOGLE_MAPS_KEY && "cursor-pointer",
+        )}
         style={{ height }}
         onClick={() => GOOGLE_MAPS_KEY && setFullscreenOpen(true)}
       >
@@ -227,7 +180,7 @@ export function MapPicker({
             <GoogleMapInteractive
               center={center}
               pickup={pickup ?? null}
-              onPick={handlePick}
+              onPick={(lat, lng) => handlePick(lat, lng)}
               height={height}
             />
           </Suspense>
@@ -236,21 +189,15 @@ export function MapPicker({
             <MapPin className="size-8 text-muted-foreground mb-2" />
             <p className="text-sm font-medium mb-1">Google Maps API key needed</p>
             <p className="text-xs text-muted-foreground max-w-[250px]">
-              Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables to enable interactive maps.
+              Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.
             </p>
           </div>
         )}
 
         {pickup && GOOGLE_MAPS_KEY && (
-          <div className="absolute top-2 right-2 bg-background/95 backdrop-blur px-2 py-1 rounded-full text-xs font-medium border border-border/40 flex items-center gap-1 pointer-events-none">
+          <div className="absolute top-2 right-2 bg-background/95 backdrop-blur px-2.5 py-1 rounded-full text-xs font-medium border border-border/40 flex items-center gap-1 pointer-events-none">
             <MapPin className="size-3 text-primary" />
-            Pin dropped
-          </div>
-        )}
-        {GOOGLE_MAPS_KEY && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur px-3 py-1 rounded-full text-xs font-medium border border-border/40 flex items-center gap-1 pointer-events-none">
-            <Maximize2 className="size-3" />
-            Tap to open full map
+            Pinned
           </div>
         )}
       </div>
@@ -263,7 +210,7 @@ export function MapPicker({
 
       {pickup && allowManualLabel && (
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Label (editable)</Label>
+          <Label className="text-xs text-muted-foreground">Selected location</Label>
           <div className="flex items-center gap-2">
             <Input
               value={pickup.label}
@@ -278,7 +225,7 @@ export function MapPicker({
                 onChange(null);
                 setCityWarning(null);
               }}
-              className="rounded-full text-muted-foreground hover:text-destructive"
+              className="rounded-full text-muted-foreground hover:text-destructive shrink-0"
               aria-label={`Clear ${label.toLowerCase()}`}
             >
               <X className="size-4" />
@@ -293,58 +240,33 @@ export function MapPicker({
 
       {/* Fullscreen map modal - like Uber */}
       <Dialog open={fullscreenOpen} onOpenChange={setFullscreenOpen}>
-        <DialogContent className="max-w-none w-screen h-screen p-0 m-0 rounded-none border-0">
+        <DialogContent className="max-w-none w-screen h-screen p-0 m-0 rounded-none border-0 [&>button]:hidden">
           <DialogTitle className="sr-only">Full screen map - {label}</DialogTitle>
           <div className="flex flex-col h-full">
-            {/* Header with search */}
-            <div className="bg-background border-b border-border p-3 flex items-center gap-2 shrink-0">
+            {/* Header with back button and search */}
+            <div className="bg-background border-b border-border p-3 flex items-center gap-2 shrink-0 z-10">
               <Button
-                variant="ghost"
-                size="icon"
+                variant="default"
                 onClick={() => setFullscreenOpen(false)}
-                className="rounded-full shrink-0"
-              >
-                <ArrowLeft className="size-5" />
-              </Button>
-              {GOOGLE_MAPS_KEY ? (
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    placeholder={`Search for a place...`}
-                    className="pl-9 rounded-full"
-                  />
-                  {searchResults.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-20 max-h-64 overflow-y-auto">
-                      {searchResults.map((result, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => handleSelectResult(result)}
-                          className="w-full text-left px-3 py-2 hover:bg-muted transition border-b border-border/40 last:border-0"
-                        >
-                          <div className="flex items-start gap-2">
-                            <MapPin className="size-4 text-primary shrink-0 mt-0.5" />
-                            <p className="text-sm font-medium truncate">{result.label}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm font-medium flex-1">Set location - {label}</p>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLocate}
                 className="rounded-full gap-1.5 shrink-0"
               >
+                <ArrowLeft className="size-4" />
+                <span className="hidden sm:inline">Back</span>
+              </Button>
+              <div className="flex-1">
+                <GooglePlacesSearch
+                  placeholder="Search for a place..."
+                  onSelect={handleSearchSelect}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleLocate}
+                className="rounded-full shrink-0"
+                title="Use my location"
+              >
                 <Crosshair className="size-4" />
-                GPS
               </Button>
             </div>
 
@@ -361,7 +283,7 @@ export function MapPicker({
                   <GoogleMapInteractive
                     center={center}
                     pickup={pickup ?? null}
-                    onPick={handlePick}
+                    onPick={(lat, lng) => handlePick(lat, lng)}
                     height="100%"
                   />
                 </Suspense>
@@ -370,14 +292,13 @@ export function MapPicker({
                   <MapPin className="size-12 text-muted-foreground mb-3" />
                   <p className="text-base font-medium mb-2">Google Maps API key needed</p>
                   <p className="text-sm text-muted-foreground max-w-md">
-                    Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables to enable the interactive map.
+                    Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.
                   </p>
                 </div>
               )}
 
-              {/* Floating instruction */}
               {GOOGLE_MAPS_KEY && !pickup && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur px-4 py-2 rounded-full text-sm font-medium border border-border/40 flex items-center gap-2 pointer-events-none shadow-lg">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur px-4 py-2.5 rounded-full text-sm font-medium border border-border/40 flex items-center gap-2 pointer-events-none shadow-lg">
                   <MapPin className="size-4 text-primary" />
                   Tap anywhere on the map to drop a pin
                 </div>

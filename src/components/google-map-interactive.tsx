@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   APIProvider,
   Map,
@@ -12,35 +12,34 @@ import type { GeoPoint } from "@/components/map-picker";
 
 const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!;
 
-// Inner component that handles map clicks and marker
+// Inner component that handles map clicks, marker, and centering
 function MapContent({
-  center,
   pickup,
   onPick,
 }: {
-  center?: { lat: number; lng: number };
   pickup: GeoPoint | null;
   onPick: (lat: number, lng: number) => void;
 }) {
   const map = useMap();
-  const geocoder = useMapsLibrary("geocoding");
+  const places = useMapsLibrary("places");
 
-  // Fly to picked location
+  // Center map on pickup when it changes
   useEffect(() => {
     if (map && pickup) {
       map.panTo({ lat: pickup.lat, lng: pickup.lng });
+      map.setZoom(14);
     }
   }, [map, pickup]);
 
   // Handle map clicks
   useEffect(() => {
     if (!map) return;
-    const listener = map.addListener("click", (e: google.maps.MapMouseEvent) => {
+    const clickListener = map.addListener("click", (e: google.maps.MapMouseEvent) => {
       if (e.latLng) {
         onPick(e.latLng.lat(), e.latLng.lng());
       }
     });
-    return () => listener.remove();
+    return () => clickListener.remove();
   }, [map, onPick]);
 
   return (
@@ -69,22 +68,26 @@ export default function GoogleMapInteractive({
   const defaultCenter = center ?? { lat: 9.0765, lng: 7.3986 };
 
   return (
-    <APIProvider apiKey={GOOGLE_MAPS_KEY}>
-      <div style={{ height, width: "100%" }}>
+    <APIProvider
+      apiKey={GOOGLE_MAPS_KEY}
+      libraries={["places", "geocoding", "marker"]}
+    >
+      <div style={{ height, width: "100%", position: "relative" }}>
         <Map
           defaultCenter={defaultCenter}
           defaultZoom={12}
           gestureHandling="greedy"
+          clickableIcons={false}
           disableDefaultUI={false}
           mapTypeControl={false}
           streetViewControl={false}
           fullscreenControl={false}
+          zoomControl={true}
           style={{ width: "100%", height: "100%" }}
-          clickableIcons={false}
+          mapId="naijaride-map"
         >
           {onPick && (
             <MapContent
-              center={center}
               pickup={pickup ?? null}
               onPick={onPick}
             />

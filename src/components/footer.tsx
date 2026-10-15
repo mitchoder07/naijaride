@@ -42,15 +42,25 @@ export function Footer() {
               Share rides across Nigeria. Save money, meet your neighbours,
               and travel together - safely, on the road that brought us all up.
             </p>
-            <div className="flex flex-wrap gap-2 text-xs">
-              <span className="chip bg-muted text-muted-foreground">
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 <MapPin className="size-3" />
-                Abuja · Ikeja · Ilorin · Kaduna · Zaria · Lokoja · PH · Ibadan · Benin · Enugu
-              </span>
-              <span className="chip bg-muted text-muted-foreground">
-                <Shield className="size-3" />
+                Available in
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {["Abuja", "Ikeja", "Ilorin", "Kaduna", "Zaria", "Lokoja", "Port Harcourt", "Ibadan", "Benin City", "Enugu"].map((city) => (
+                  <span
+                    key={city}
+                    className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground font-medium"
+                  >
+                    {city}
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1">
+                <Shield className="size-3 text-primary" />
                 Verified drivers
-              </span>
+              </div>
             </div>
             <div className="flex gap-3 text-muted-foreground pt-2">
               <button className="size-8 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition flex items-center justify-center" aria-label="Trust & Safety">
