@@ -104,7 +104,7 @@ export function WalletView() {
     );
   }
 
-  // Passengers don't have earnings — redirect them with a friendly message
+  // Passengers don't have earnings - redirect them with a friendly message
   if (!isDriver) {
     return (
       <main className="container mx-auto px-4 py-8 md:py-12 max-w-lg">
@@ -278,7 +278,7 @@ export function WalletView() {
                           <p className="text-xs text-muted-foreground truncate">
                             {t.booking
                               ? `${t.booking.trip.originLabel} → ${t.booking.trip.destinationLabel}`
-                              : "—"}
+                              : "-"}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {timeAgo(t.createdAt)}

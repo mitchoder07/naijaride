@@ -69,14 +69,14 @@ const STEPS = [
     icon: Compass,
     title: "Find a ride",
     description:
-      "Search by pickup and drop-off. We score trips by distance and time so the closest matches rise to the top — no endless scrolling.",
+      "Search by pickup and drop-off. We score trips by distance and time so the closest matches rise to the top - no endless scrolling.",
     step: "01",
   },
   {
     icon: Car,
     title: "Book your seat",
     description:
-      "Pick your seat, pay with Paystack, and you're confirmed instantly. The platform keeps 10% — drivers keep 90%.",
+      "Pick your seat, pay with Paystack, and you're confirmed instantly. The platform keeps 10% - drivers keep 90%.",
     step: "02",
   },
   {
@@ -93,7 +93,7 @@ const WHY = [
     icon: Wallet,
     title: "Save up to 70%",
     description:
-      "Split fuel and tolls with other passengers. Pay drivers directly through the platform — no middle-men taking a slice.",
+      "Split fuel and tolls with other passengers. Pay drivers directly through the platform - no middle-men taking a slice.",
     stat: "₦42M+",
     statLabel: "saved by riders",
   },
@@ -109,7 +109,7 @@ const WHY = [
     icon: Sparkles,
     title: "Smart matching",
     description:
-      "Our matching engine ranks trips by pickup & drop-off distance and time proximity using Haversine — built for Nigeria.",
+      "Our matching engine ranks trips by pickup & drop-off distance and time proximity using Haversine - built for Nigeria.",
     stat: "<3s",
     statLabel: "match time",
   },
@@ -154,7 +154,7 @@ export function LandingView() {
 
   return (
     <main>
-      {/* Hero — bold sunset */}
+      {/* Hero - bold sunset */}
       <section className="relative bg-hero-sunset overflow-hidden">
         <div className="absolute inset-0 bg-grid-dots opacity-40 pointer-events-none" />
         <div className="container mx-auto px-4 py-14 md:py-24 relative">
@@ -191,7 +191,7 @@ export function LandingView() {
               </h1>
               <p className="mt-8 text-lg text-muted-foreground max-w-xl text-pretty leading-relaxed">
                 NaijaRide connects drivers and passengers travelling the same way.
-                Save money, build community, and travel together — safely, on the road that raised us.
+                Save money, build community, and travel together - safely, on the road that raised us.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
                 <Button
@@ -301,7 +301,7 @@ export function LandingView() {
                 </CardContent>
               </Card>
 
-              {/* Floating stat chip — positioned to not overlap the card */}
+              {/* Floating stat chip - positioned to not overlap the card */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -323,7 +323,7 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* Featured Routes — bigger cards */}
+      {/* Featured Routes - bigger cards */}
       <section className="py-16 border-y-2 border-foreground/10 bg-card/40">
         <div className="container mx-auto px-4">
           <div className="flex items-end justify-between mb-8">
@@ -336,7 +336,7 @@ export function LandingView() {
                 Where Naija is heading
               </h2>
               <p className="text-muted-foreground mt-2 max-w-lg">
-                The routes our riders travel most every week — Lagos to Abuja is the king.
+                The routes our riders travel most every week - Lagos to Abuja is the king.
               </p>
             </div>
             <Button
@@ -401,7 +401,7 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* How it works — big numbered steps */}
+      {/* How it works - big numbered steps */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-dots opacity-25 pointer-events-none" />
         <div className="container mx-auto px-4 relative">
@@ -411,7 +411,7 @@ export function LandingView() {
               Three steps. One journey.
             </h2>
             <p className="text-muted-foreground mt-3 text-lg">
-              From finding a ride to arriving together — NaijaRide keeps it simple.
+              From finding a ride to arriving together - NaijaRide keeps it simple.
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-3 relative">
@@ -479,7 +479,7 @@ export function LandingView() {
         </section>
       )}
 
-      {/* Why NaijaRide — with stats */}
+      {/* Why NaijaRide - with stats */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-hero-sunset opacity-50 pointer-events-none" />
         <div className="container mx-auto px-4 relative">
@@ -572,7 +572,7 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* CTA — bold stamp */}
+      {/* CTA - bold stamp */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="rounded-[2.5rem] bg-foreground text-background p-10 md:p-16 relative overflow-hidden border-2 border-foreground/10">
@@ -586,7 +586,7 @@ export function LandingView() {
                   Ready to share your next ride?
                 </h2>
                 <p className="mt-4 text-background/70 max-w-md text-lg">
-                  Join thousands of drivers and passengers building the future of Nigerian transport — together.
+                  Join thousands of drivers and passengers building the future of Nigerian transport - together.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row md:justify-end gap-3">
