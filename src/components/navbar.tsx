@@ -88,7 +88,7 @@ export function Navbar() {
 
   return (
     <>
-      {/* Navbar — z-[1000] to stay above Leaflet maps (which use up to z-700) */}
+      {/* Navbar - z-[1000] to stay above Leaflet maps (which use up to z-700) */}
       <header className="sticky top-0 z-[1000] w-full border-b border-border/60 bg-background shadow-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
           {/* Left: Logo */}
@@ -102,6 +102,7 @@ export function Navbar() {
                 <button
                   key={item.view}
                   onClick={() => handleNav(item.view)}
+                  title={item.label}
                   className={cn(
                     "flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
                     active
@@ -111,7 +112,7 @@ export function Navbar() {
                   aria-current={active ? "page" : undefined}
                 >
                   <item.icon className="size-4 shrink-0" />
-                  <span className="hidden xl:inline">{item.label}</span>
+                  <span>{item.label}</span>
                 </button>
               );
             })}
@@ -119,6 +120,7 @@ export function Navbar() {
             {isAuthenticated && isAdmin && (
               <button
                 onClick={() => handleNav("admin")}
+                title="Admin dashboard"
                 className={cn(
                   "flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
                   route.view === "admin"
@@ -128,7 +130,7 @@ export function Navbar() {
                 aria-current={route.view === "admin" ? "page" : undefined}
               >
                 <ShieldCheck className="size-4 shrink-0" />
-                <span className="hidden xl:inline">Admin</span>
+                <span>Admin</span>
               </button>
             )}
           </nav>
@@ -194,7 +196,7 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* Mobile menu — fixed overlay, doesn't push content down */}
+      {/* Mobile menu - fixed overlay, doesn't push content down */}
       {open && (
         <div className="lg:hidden fixed inset-0 z-[1100] flex flex-col">
           {/* Backdrop */}
@@ -203,7 +205,7 @@ export function Navbar() {
             onClick={() => setOpen(false)}
           />
 
-          {/* Menu panel — slides from top, takes full width */}
+          {/* Menu panel - slides from top, takes full width */}
           <div className="relative bg-background shadow-xl flex flex-col max-h-[85vh] overflow-y-auto">
             {/* Menu header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">

@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, Suspense, lazy } from "react";
+import { useEffect, useRef, useState, Suspense, lazy } from "react";
 import { MapPin, Crosshair, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  SUPPORTED_CITIES,
+  findNearestCity,
+  type SupportedCity,
+} from "@/lib/cities";
 
 export interface GeoPoint {
   label: string;
@@ -14,73 +19,72 @@ export interface GeoPoint {
   lng: number;
 }
 
-// Map components — lazy-loaded so leaflet never imports on server.
-const MapInteractive = lazy(() => import("./map-interactive"));
-const MapStatic = lazy(() => import("./map-static"));
-
-// Simple label resolver using Nominatim (free OSM geocoding)
-async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`,
-      { headers: { Accept: "application/json" } },
-    );
-    if (!res.ok) return `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
-    const data = await res.json();
-    const addr = data?.address ?? {};
-
-    // Build label from most specific to least specific, skipping duplicates
-    const parts: string[] = [];
-    const fields = [
-      addr.neighbourhood,
-      addr.suburb,
-      addr.city,
-      addr.town,
-      addr.village,
-      addr.county,
-      addr.state,
-      addr.country,
-    ];
-
-    for (const f of fields) {
-      if (!f) continue;
-      // Skip if this part is already included (e.g. "Nigeria" appearing twice)
-      if (parts.some((p) => p.toLowerCase() === f.toLowerCase())) continue;
-      parts.push(f);
-      // Stop after we have 3 meaningful parts (enough context)
-      if (parts.length >= 3) break;
-    }
-
-    return parts.join(", ") || data?.display_name || `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
-  } catch {
-    return `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
-  }
-}
+// Check if Google Maps API key is configured
+const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 interface MapPickerProps {
   pickup?: GeoPoint | null;
   onChange: (p: GeoPoint | null) => void;
-  center?: [number, number];
+  center?: { lat: number; lng: number };
   height?: string;
   label?: string;
   allowManualLabel?: boolean;
 }
 
+// Lazy load the Google Maps interactive component
+const GoogleMapInteractive = lazy(() => import("./google-map-interactive"));
+
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  if (!GOOGLE_MAPS_KEY) {
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }
+  try {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_KEY}&language=en`,
+    );
+    if (!res.ok) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    const data = await res.json();
+    if (data.results && data.results.length > 0) {
+      // Use the first result, but clean it up
+      const address = data.results[0].formatted_address;
+      return address;
+    }
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  } catch {
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }
+}
+
 export function MapPicker({
   pickup,
   onChange,
-  center = [9.0765, 7.3986],
+  center,
   height = "320px",
   label = "Pickup point",
   allowManualLabel = true,
 }: MapPickerProps) {
   const lookupBusy = useRef(false);
+  const [cityWarning, setCityWarning] = useState<string | null>(null);
 
   const handlePick = async (lat: number, lng: number) => {
     if (lookupBusy.current) return;
     lookupBusy.current = true;
     try {
       const resolved = await reverseGeocode(lat, lng);
+
+      // Check if location is in a supported city
+      const nearest = findNearestCity(lat, lng);
+      if (!nearest) {
+        const cityNames = SUPPORTED_CITIES.slice(0, 5)
+          .map((c) => c.name)
+          .join(", ");
+        setCityWarning(
+          `This location is outside our service area. We currently operate in: ${cityNames}, and more.`,
+        );
+        return; // Don't set the location
+      }
+
+      setCityWarning(null);
       onChange({ label: resolved, lat, lng });
     } finally {
       lookupBusy.current = false;
@@ -121,30 +125,46 @@ export function MapPicker({
         className="rounded-2xl overflow-hidden border-2 border-border/60 relative"
         style={{ height }}
       >
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-full bg-muted">
-              <div className="size-6 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" />
-            </div>
-          }
-        >
-          <MapInteractive
-            center={center}
-            pickup={pickup ?? null}
-            onPick={handlePick}
-            height={height}
-          />
-        </Suspense>
+        {GOOGLE_MAPS_KEY ? (
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full bg-muted">
+                <div className="size-6 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" />
+              </div>
+            }
+          >
+            <GoogleMapInteractive
+              center={center}
+              pickup={pickup ?? null}
+              onPick={handlePick}
+              height={height}
+            />
+          </Suspense>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full bg-muted text-center p-4">
+            <MapPin className="size-8 text-muted-foreground mb-2" />
+            <p className="text-sm font-medium mb-1">Google Maps API key needed</p>
+            <p className="text-xs text-muted-foreground max-w-[250px]">
+              Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables to enable interactive maps.
+            </p>
+          </div>
+        )}
 
-        {!pickup && (
+        {!pickup && GOOGLE_MAPS_KEY && (
           <div className="absolute inset-0 bg-background/30 pointer-events-none flex items-center justify-center">
-            <div className="bg-background/90 backdrop-blur px-4 py-2 rounded-full text-sm font-medium border-2 border-border/40 flex items-center gap-2 pointer-events-none">
+            <div className="bg-background/95 backdrop-blur px-4 py-2 rounded-full text-sm font-medium border-2 border-border/40 flex items-center gap-2 pointer-events-none">
               <MapPin className="size-4 text-primary" />
               Tap the map to drop a pin
             </div>
           </div>
         )}
       </div>
+
+      {cityWarning && (
+        <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+          {cityWarning}
+        </div>
+      )}
 
       {pickup && allowManualLabel && (
         <div className="space-y-1.5">
@@ -159,7 +179,10 @@ export function MapPicker({
               type="button"
               size="icon"
               variant="ghost"
-              onClick={() => onChange(null)}
+              onClick={() => {
+                onChange(null);
+                setCityWarning(null);
+              }}
               className="rounded-full text-muted-foreground hover:text-destructive"
               aria-label={`Clear ${label.toLowerCase()}`}
             >
@@ -176,7 +199,7 @@ export function MapPicker({
   );
 }
 
-/** Compact route preview — non-interactive */
+// Compact route preview using Google Maps
 export function RoutePreviewMap({
   origin,
   destination,
@@ -190,40 +213,33 @@ export function RoutePreviewMap({
   height?: string;
   className?: string;
 }) {
-  const positions = useMemo<[number, number][]>(() => {
-    const pts: GeoPoint[] = [origin, ...waypoints, destination];
-    return pts.map((p) => [p.lat, p.lng]);
-  }, [origin, destination, waypoints]);
-
-  const bounds = useMemo<[[number, number], [number, number]]>(() => {
-    const latMin = Math.min(...positions.map((p) => p[0]));
-    const latMax = Math.max(...positions.map((p) => p[0]));
-    const lngMin = Math.min(...positions.map((p) => p[1]));
-    const lngMax = Math.max(...positions.map((p) => p[1]));
-    return [
-      [latMin, lngMin],
-      [latMax, lngMax],
-    ];
-  }, [positions]);
-
   return (
     <div
       className={cn("rounded-2xl overflow-hidden border-2 border-border/40", className)}
       style={{ height }}
     >
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center h-full bg-muted">
-            <div className="size-6 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" />
-          </div>
-        }
-      >
-        <MapStatic
-          bounds={bounds}
-          polylinePositions={positions}
-          markers={[...waypoints, origin, destination].map((p) => [p.lat, p.lng])}
-        />
-      </Suspense>
+      {GOOGLE_MAPS_KEY ? (
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-full bg-muted">
+              <div className="size-6 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" />
+            </div>
+          }
+        >
+          <GoogleRoutePreview
+            origin={origin}
+            destination={destination}
+            waypoints={waypoints}
+          />
+        </Suspense>
+      ) : (
+        <div className="flex items-center justify-center h-full bg-muted">
+          <MapPin className="size-8 text-muted-foreground" />
+        </div>
+      )}
     </div>
   );
 }
+
+// Lazy loaded route preview
+const GoogleRoutePreview = lazy(() => import("./google-route-preview"));

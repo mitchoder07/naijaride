@@ -40,7 +40,7 @@ export function Footer() {
             <Logo size={40} onClick={() => navigate("landing")} />
             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
               Share rides across Nigeria. Save money, meet your neighbours,
-              and travel together — safely, on the road that brought us all up.
+              and travel together - safely, on the road that brought us all up.
             </p>
             <div className="flex flex-wrap gap-2 text-xs">
               <span className="chip bg-muted text-muted-foreground">
@@ -96,11 +96,6 @@ export function Footer() {
           <p>
             © {new Date().getFullYear()} NaijaRide. Built for Nigerian roads.
           </p>
-          <div className="flex items-center gap-3">
-            <span className="chip bg-muted/60 text-muted-foreground">Mock Paystack</span>
-            <span className="chip bg-muted/60 text-muted-foreground">No real payments</span>
-            <span className="chip bg-primary/15 text-primary">Demo build</span>
-          </div>
         </div>
       </div>
     </footer>

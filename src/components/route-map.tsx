@@ -94,7 +94,7 @@ export function RouteMap({
         ))}
       </svg>
 
-      {/* Origin label — top left, with solid background for readability */}
+      {/* Origin label - top left, with solid background for readability */}
       <div className="absolute top-3 left-3 z-10 max-w-[55%]">
         <div className="flex items-center gap-1.5 bg-background/95 backdrop-blur border border-border/60 rounded-full pl-1.5 pr-2.5 py-1 shadow-sm">
           <div className="size-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
@@ -111,7 +111,7 @@ export function RouteMap({
         </div>
       </div>
 
-      {/* Destination label — bottom right, with solid background */}
+      {/* Destination label - bottom right, with solid background */}
       <div className="absolute bottom-3 right-3 z-10 max-w-[55%]">
         <div className="flex items-center gap-1.5 bg-background/95 backdrop-blur border border-border/60 rounded-full pl-2.5 pr-1.5 py-1 shadow-sm">
           <div className="min-w-0 text-right">
