@@ -79,7 +79,7 @@ export function SosButton({ bookingId, tripId, className }: SosButtonProps) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 size-16 rounded-full bg-destructive text-destructive-foreground shadow-2xl shadow-destructive/40 flex items-center justify-center font-bold gap-1 flex-col border-4 border-background animate-glow-pulse-destructive ${className ?? ""}`}
+        className={`fixed bottom-6 right-6 z-[900] size-16 rounded-full bg-destructive text-destructive-foreground shadow-2xl shadow-destructive/40 flex items-center justify-center font-bold gap-1 flex-col border-4 border-background ${className ?? ""}`}
         aria-label="SOS — Send emergency alert"
       >
         <Siren className="size-5" />
