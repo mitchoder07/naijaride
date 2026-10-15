@@ -45,7 +45,7 @@
 }
 
 /* ============================================================
-   NAIJARIDE DESIGN SYSTEM v2 — "Road Trip Sunset"
+   NAIJARIDE DESIGN SYSTEM v2 - "Road Trip Sunset"
    Light: warm cream paper + ink-black + sunset orange + emerald accent
    Dark: deep cocoa + warm cream text + glowing sunset + emerald accent
    ============================================================ */
@@ -61,7 +61,7 @@
   --card-foreground: oklch(0.18 0.018 50);
   --popover: oklch(1 0.004 75);
   --popover-foreground: oklch(0.18 0.018 50);
-  /* Sunset orange #E8590C — bold, Nigerian sunset */
+  /* Sunset orange #E8590C - bold, Nigerian sunset */
   --primary: oklch(0.62 0.21 38);
   --primary-foreground: oklch(0.99 0.005 75);
   /* Sand secondary */
@@ -153,7 +153,7 @@
 }
 
 /* ============================================================
-   Custom utilities — texture, gradients, animations
+   Custom utilities - texture, gradients, animations
    ============================================================ */
 @layer utilities {
   .font-display {
@@ -176,12 +176,12 @@
     border: 2px solid var(--foreground);
   }
 
-  /* Grainy paper texture for cards — removed, now solid */
+  /* Grainy paper texture for cards - removed, now solid */
   .bg-grain {
     background: var(--muted);
   }
 
-  /* Hero — solid background, no gradients */
+  /* Hero - solid background, no gradients */
   .bg-hero-sunset {
     background: var(--background);
   }
@@ -189,7 +189,7 @@
     background: var(--background);
   }
 
-  /* Solid grid background removed — use muted for subtle distinction */
+  /* Solid grid background removed - use muted for subtle distinction */
   .bg-grid-dots {
     background: var(--muted);
   }
@@ -197,7 +197,7 @@
     background: var(--muted);
   }
 
-  /* Stamp-style card — simple shadow, no colored glow */
+  /* Stamp-style card - simple shadow, no colored glow */
   .card-stamp {
     box-shadow: 0 4px 16px -8px oklch(0 0 0 / 15%);
   }
@@ -215,9 +215,9 @@
     animation: stamp-spin 18s linear infinite;
   }
 
-  /* Pulse glow removed — use simple hover instead */
+  /* Pulse glow removed - use simple hover instead */
   .animate-glow-pulse {
-    /* no-op — removed gradient glow */
+    /* no-op - removed gradient glow */
   }
 
   /* Reveal mask removed */
@@ -257,12 +257,12 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-/* Glow keyframes removed — solid colors only */
+/* Glow keyframes removed - solid colors only */
 .animate-glow-pulse-destructive {
   /* no-op */
 }
 
-/* Leaflet tweaks — keep maps BELOW the navbar (navbar is z-[1000]) */
+/* Leaflet tweaks - keep maps BELOW the navbar (navbar is z-[1000]) */
 .leaflet-container {
   font-family: var(--font-body), system-ui, sans-serif !important;
   background: var(--muted) !important;
