@@ -62,7 +62,7 @@ export function SosButton({ bookingId, tripId, className }: SosButtonProps) {
         lng: location?.lng,
         message: message || "I feel unsafe. Please check on me.",
       });
-      toast.success("SOS sent — emergency contacts and NaijaRide safety team have been alerted.");
+      toast.success("SOS sent - emergency contacts and NaijaRide safety team have been alerted.");
       setOpen(false);
       setMessage("");
     } catch (err) {
@@ -80,7 +80,7 @@ export function SosButton({ bookingId, tripId, className }: SosButtonProps) {
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(true)}
         className={`fixed bottom-6 right-6 z-[900] size-16 rounded-full bg-destructive text-destructive-foreground shadow-2xl shadow-destructive/40 flex items-center justify-center font-bold gap-1 flex-col border-4 border-background ${className ?? ""}`}
-        aria-label="SOS — Send emergency alert"
+        aria-label="SOS - Send emergency alert"
       >
         <Siren className="size-5" />
         <span className="text-[10px] tracking-wider">SOS</span>
@@ -107,7 +107,7 @@ export function SosButton({ bookingId, tripId, className }: SosButtonProps) {
               <p className="text-sm font-medium text-destructive">In immediate danger?</p>
               <p className="text-xs text-muted-foreground">
                 Call <span className="font-bold">112</span> (Nigeria Emergency) or{" "}
-                <span className="font-bold">199</span> (Police) directly. SOS alerts your network —
+                <span className="font-bold">199</span> (Police) directly. SOS alerts your network -
                 but emergency services respond faster.
               </p>
               <div className="flex gap-2 pt-1">
